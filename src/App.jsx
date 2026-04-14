@@ -1,22 +1,26 @@
 import "./App.css";
-import TodoName from "./components/TodoName";
-import TodoInput from "./components/TodoInput";
-import TodoItems from "./components/TodoItem";
-import Container from "./components/Container";
-import WelcomeMessage from "./components/WelcomeMessage";
+import MissionHeader from "./components/MissionHeader";
+import TaskCommandCenter from "./components/TaskCommandCenter";
+import MissionStream from "./components/MissionStream";
+import Sidebar from "./components/Sidebar";
+import StatsPulse from "./components/StatsPulse";
 import TodoItemsContextProvider from "./store/todo-items-store";
 
 function App() {
   return (
     <TodoItemsContextProvider>
-      <Container>
-        <TodoName></TodoName>
-        <TodoInput></TodoInput>
-        <WelcomeMessage></WelcomeMessage>
-        <TodoItems></TodoItems>
-      </Container>
+      <div className="app-container">
+        <Sidebar />
+        <main className="main-content">
+          <MissionHeader />
+          <StatsPulse />
+          <TaskCommandCenter />
+          <MissionStream />
+        </main>
+      </div>
     </TodoItemsContextProvider>
   );
 }
 
 export default App;
+

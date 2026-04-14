@@ -1,53 +1,65 @@
-import { createContext } from "react";
-import { useReducer } from "react";
+import { createContext, useReducer, useState } from "react";
+
+const INITIAL_STATE = JSON.parse(localStorage.getItem("zenith_tasks")) || [];
 
 export const TodoContextItems = createContext({
   todoItems: [],
   addNewItem: () => {},
   deleteItem: () => {},
+  toggleItem: () => {},
+  filter: "All Tasks",
+  setFilter: () => {},
 });
 
 const todoItemsReducer = (currTodoItems, action) => {
   let newTodoItems = currTodoItems;
-  if (action.type === "NEW_ITEM") {
-    newTodoItems = [
-      ...currTodoItems,
-      {
-        name: action.payload.todoItemName,
-        dueDate: action.payload.todoDueDate,
-      },
-    ];
-    return newTodoItems;
-  } else if (action.type === "DELETE_ITEM") {
-    newTodoItems = currTodoItems.filter(
-      (item) => item.name != action.payload.itemName
-    );
-    return newTodoItems;
+  switch (action.type) {
+    case "NEW_ITEM":
+      newTodoItems = [
+        ...currTodoItems,
+        {
+          id: Date.now(),
+          name: action.payload.todoItemName,
+          dueDate: action.payload.todoDueDate,
+          priority: action.payload.priority || "Medium",
+          category: action.payload.category || "Work",
+          completed: false,
+          createdAt: new Date().toISOString(),
+        },
+      ];
+      break;
+    case "DELETE_ITEM":
+      newTodoItems = currTodoItems.filter((item) => item.id !== action.payload.id);
+      break;
+    case "TOGGLE_ITEM":
+      newTodoItems = currTodoItems.map((item) =>
+        item.id === action.payload.id ? { ...item, completed: !item.completed } : item
+      );
+      break;
+    default:
+      return currTodoItems;
   }
+  localStorage.setItem("zenith_tasks", JSON.stringify(newTodoItems));
+  return newTodoItems;
 };
 
 const TodoItemsContextProvider = ({ children }) => {
-  const [todoItems, dispatchTodoItems] = useReducer(todoItemsReducer, []);
+  const [todoItems, dispatchTodoItems] = useReducer(todoItemsReducer, INITIAL_STATE);
+  const [filter, setFilter] = useState("All Tasks");
 
-  let addNewItem = (todoItemName, todoDueDate) => {
-    const newItemAction = {
+  const addNewItem = (todoItemName, todoDueDate, priority, category) => {
+    dispatchTodoItems({
       type: "NEW_ITEM",
-      payload: {
-        todoItemName,
-        todoDueDate,
-      },
-    };
-    dispatchTodoItems(newItemAction);
+      payload: { todoItemName, todoDueDate, priority, category },
+    });
   };
 
-  let deleteItem = (itemName) => {
-    const deleteItemAction = {
-      type: "DELETE_ITEM",
-      payload: {
-        itemName,
-      },
-    };
-    dispatchTodoItems(deleteItemAction);
+  const deleteItem = (id) => {
+    dispatchTodoItems({ type: "DELETE_ITEM", payload: { id } });
+  };
+
+  const toggleItem = (id) => {
+    dispatchTodoItems({ type: "TOGGLE_ITEM", payload: { id } });
   };
 
   return (
@@ -56,6 +68,9 @@ const TodoItemsContextProvider = ({ children }) => {
         todoItems,
         addNewItem,
         deleteItem,
+        toggleItem,
+        filter,
+        setFilter,
       }}
     >
       {children}
